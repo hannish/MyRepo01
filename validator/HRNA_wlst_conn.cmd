@@ -1,0 +1,2 @@
+call E:\myMicros\Oracle\Middleware\user_projects\domains\bifoundation_domain\bin\setdomainenv.cmd
+java -Dweblogic.security.SSL.enableJSSE=true -Dweblogic.security.SSL.protocolVersion=TLS1 -Dweblogic.security.SSL.minimumProtocolVersion=TLSv1.2 weblogic.WLST E:\scripts\validator\HRNA_status.py

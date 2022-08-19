@@ -1,0 +1,2 @@
+call D:\ORA\user_projects\domains\OperaDomain\bin\setdomainenv.cmd
+java -Dweblogic.security.SSL.enableJSSE=true -Dweblogic.security.SSL.protocolVersion=TLS1 -Dweblogic.security.SSL.minimumProtocolVersion=TLSv1.2 weblogic.WLST D:\scripts\validator\11g_status.py
