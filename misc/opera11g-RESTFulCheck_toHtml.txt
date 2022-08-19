@@ -1,0 +1,271 @@
+require "open-uri"
+require "socket"
+require "nokogiri"
+require "openssl"
+require "time"
+
+if hostname = ARGV[0]
+ puts "Entered HostName : #{hostname}"
+elsif hostname = Socket.gethostname
+ puts "HostName : #{hostname}"
+else
+ puts "if you are running from Jump server script usage e.g. - <script> <hostname>"
+ puts "!! sorry can't guess hostname, better luck next time !!"
+ exit 0
+end
+
+time = Time.new
+cur_time = time.strftime("%d%m%Y%k%M")
+
+OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
+file_path = 'd:/scripts/validator/logs'
+EXCEPTIONS = [OpenURI::HTTPError, Errno::ECONNREFUSED, Errno::ENOENT]
+
+begin
+  remote_base_url = "https://#{hostname}:7042/management/tenant-monitoring/servers/WLS_HOME?full"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "WLS_HOME - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "https://#{hostname}:7042/management/tenant-monitoring/servers/WLS_FORMS?full"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "WLS_FORMS - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "https://#{hostname}:7042/management/tenant-monitoring/servers/WLS_REPORTS?full"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "WLS_REPORTS - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "https://#{hostname}:7042/management/tenant-monitoring/datasources?full"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "datasources - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "http://#{hostname}:6003/Operajserv/Ifc8ws/Ifc8ws"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "Ifc8ws - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "https://#{hostname}/server-status"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "server-status - connection issue ....continuing"  
+end  
+
+begin
+  remote_base_url = "https://#{hostname}/Operajserv/OXIServlets/PMSInterface?info=Y"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/PMSInterface - connection issue ....continuing"  
+end  
+
+begin
+  remote_base_url = "https://#{hostname}/Operajserv/OXIServlets/ORSInterface?info=y"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/ORSInterface - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "https://#{hostname}/Operajserv/OXIServlets/CRSStatus?info=y"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/CRSStatus - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "https://#{hostname}/Operajserv/OXIServlets/ORSLookup?info=y"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/ORSLookup - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "https://#{hostname}/Operajserv/OXIServlets/HXInterface?info=y"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/HXInterface - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "https://#{hostname}/Operajserv/OXIServlets/BEInterface?info=Y"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/BEInterface - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "https://#{hostname}/Operajserv/OXIServlets/RemoteMonitor?info=Y"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/RemoteMonitor - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "https://#{hostname}/Operajserv/OXIServlets/HXInterfaceProxy=Y"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/HXInterfaceProxy - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "https://#{hostname}/Operajserv/OXIServlets/ExportReceiver=Y"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/ExportReceiver - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "https://#{hostname}/Operajserv/OXIServlets/WebClientProxy?info=Y"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/WebClientProxy - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "https://#{hostname}/Operajserv/OXIServlets/XMLValidator?info=Y"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/XMLValidator - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "https://#{hostname}/reports/rwservlet/getserverinfo?server=rep#{hostname}OPERA"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/rwservlet/getserverinfo - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "https://#{hostname}/reports/rwservlet/showjobs?server=rep#{hostname}OPERA"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+end
+rescue *EXCEPTIONS => connection_issue
+  puts "/rwservlet/showjobs - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "https://#{hostname}/reports/rwservlet/showenv?server=rep#{hostname}OPERA"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/rwservlet/showenv - connection issue ....continuing"  
+end
+
+begin
+  ftext=File.open("#{file_path}/#{hostname}_dsname_2.txt").read
+  ftext.gsub!(/\r\n?/, "\n")
+  for i in ftext.each_line do
+    remote_base_url = "https://#{hostname}/Operajserv/operainternalservlets/IASEnvironment?jndiname=#{i}&trace=OFF"
+    remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+    File.open("#{file_path}/#{hostname}-healthcheck-status-page.html", 'a') do |fo|
+      fo.write(remote_data)
+      fo.close
+    end
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/operainternalservlets/IASEnvironment - connection issue ....continuing"  
+end
+
+begin
+  doc = Nokogiri::HTML(open("#{file_path}/#{hostname}-healthcheck-status-page.html"))
+  doc.to_html
+  File.open("#{file_path}/#{hostname}-overall-status.html", 'w') do |fo|
+    doc.search('img', 'a', 'pre', '.OraCopyright', '.OraFieldText', '.OraHeaderSub').each(&:remove)
+    fo.puts doc
+  end
+rescue *EXCEPTIONS => file_notfound
+  puts "file notfound issue ....continuing"
+end
+
+puts "Consolidated Output File Location : #{file_path}/#{hostname}-APP_STATUS.txt"
+puts "Consolidated Output File Location : #{file_path}/#{hostname}-#{cur_time}-overall-status.html"

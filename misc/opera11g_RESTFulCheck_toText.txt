@@ -1,0 +1,477 @@
+require 'open-uri'
+require 'nokogiri'
+require 'openssl'
+require 'socket'
+require 'base64'
+require 'open3'
+
+if hostname = ARGV[0]
+ puts "Entered HostName : #{hostname}"
+elsif hostname = Socket.gethostname
+ puts "HostName : #{hostname}"
+else
+ puts "if you are running from Jump server script usage e.g. - <script> <hostname>"
+ puts "!! sorry can't guess hostname, better luck next time !!"
+ exit 0
+end
+
+OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
+file_path = 'd:/scripts/validator/logs'
+EXCEPTIONS = [OpenURI::HTTPError, Errno::ECONNREFUSED, Errno::ENOENT]
+
+begin
+  File.delete("#{file_path}/#{hostname}_dsname_2.txt") if File.exist?("#{file_path}")
+  File.delete("#{file_path}/#{hostname}_APP_STATUS.txt") if File.exist?("#{file_path}")
+rescue *EXCEPTIONS => file_notfound
+  puts "File not found issue ....continuing"
+end 
+
+File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+  fo.puts "Running on HostName : #{hostname}"
+  fo.puts ''
+end
+
+begin
+  page = Nokogiri::HTML(open("https://#{hostname}:7042/management/tenant-monitoring/servers/WLS_HOME?full", :http_basic_authentication => %w[weblogic opera321] ))
+  parsed_data_1 = page.css("li")[2].text
+  parsed_data_2 = page.css("li")[3].text
+  parsed_data_3 = page.css("li")[4].text
+  parsed_data_4 = page.css("li")[5].text
+  parsed_data_5 = page.css("li")[6].text
+  File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+    fo.puts "#### Validating WLS_HOME ###"
+    fo.puts parsed_data_1
+    fo.puts parsed_data_2
+    fo.puts parsed_data_3
+    fo.puts parsed_data_4
+    fo.puts parsed_data_5
+    fo.puts ''
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "connection issue ....continuing"  
+end
+
+begin
+  page = Nokogiri::HTML(open("https://#{hostname}:7042/management/tenant-monitoring/servers/WLS_FORMS?full", :http_basic_authentication => %w[weblogic opera321] ))
+  parsed_data_1 = page.css("li")[2].text
+  parsed_data_2 = page.css("li")[3].text
+  parsed_data_3 = page.css("li")[4].text
+  parsed_data_4 = page.css("li")[5].text
+  parsed_data_5 = page.css("li")[6].text
+  File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+    fo.puts "#### Validating WLS_FORM ###"
+    fo.puts parsed_data_1
+    fo.puts parsed_data_2
+    fo.puts parsed_data_3
+    fo.puts parsed_data_4
+    fo.puts parsed_data_5
+    fo.puts ''
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "connection issue ....continuing"  
+end
+
+begin
+  page = Nokogiri::HTML(open("https://#{hostname}:7042/management/tenant-monitoring/servers/WLS_REPORTS?full", :http_basic_authentication => %w[weblogic opera321] ))
+  parsed_data_1 = page.css("li")[2].text
+  parsed_data_2 = page.css("li")[3].text
+  parsed_data_3 = page.css("li")[4].text
+  parsed_data_4 = page.css("li")[5].text
+  parsed_data_5 = page.css("li")[6].text
+  File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+    fo.puts "#### Validating WLS_REPORTS ###"
+    fo.puts parsed_data_1
+    fo.puts parsed_data_2
+    fo.puts parsed_data_3
+    fo.puts parsed_data_4
+    fo.puts parsed_data_5
+    fo.puts ''
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "connection issue ....continuing"  
+end
+
+begin
+  page = Nokogiri::HTML(open("https://#{hostname}:7042/management/tenant-monitoring/datasources?full", :http_basic_authentication => %w[weblogic opera321] ))
+  parsed_data_1 = page.css("ol li ul").map(&:text)
+  File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+    fo.puts "#### Validating DataSource ###"
+    fo.puts parsed_data_1
+    fo.puts ''
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "connection issue ....continuing"  
+end
+
+begin
+  page = Nokogiri::HTML(open("https://#{hostname}:7042/management/tenant-monitoring/datasources?full", :http_basic_authentication => %w[weblogic opera321] ))
+  str = page.css("ol li ul li").map(&:text)
+  fstr = str.grep(/^n/)
+  File.open("#{file_path}/#{hostname}_dsname_1.txt", 'w') do |fo|
+    fo.puts fstr
+  end
+  text=File.open("#{file_path}/#{hostname}_dsname_1.txt").read
+  text.gsub!(/\r\n?/, "\n")
+  text.each_line do |line|
+    x = "#{line}"
+    val1,val2 = x.slice!(0...6), x
+    File.open("#{file_path}/#{hostname}_dsname_2.txt", 'a') do |fo|
+      fo.puts x
+    end
+  end
+  ftext=File.open("#{file_path}/#{hostname}_dsname_2.txt").read
+  ftext.gsub!(/\r\n?/, "\n")
+  for i in ftext.each_line do
+    page = Nokogiri::HTML(open("https://#{hostname}/Operajserv/operainternalservlets/IASEnvironment?jndiname=#{i}&trace=OFF", :http_basic_authentication => %w[weblogic opera321] ))
+    parsed_data_1 = page.css("title").map(&:text)
+    parsed_data_2 = page.css("body").map(&:text)
+    File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+      fo.puts "#### Validating IAS ENVIRONMENT for DataSource Name : #{i} ###"
+      fo.puts parsed_data_1
+      fo.puts parsed_data_2
+      fo.puts ''
+    end
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "connection issue ....continuing"  
+end
+
+begin
+  page = Nokogiri::HTML(open("http://#{hostname}:6003/Operajserv/Ifc8ws/Ifc8ws", :http_basic_authentication => %w[weblogic opera321] ))
+  parsed_data_1 = page.css('td tr').map(&:text)
+  File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+    fo.puts "#### Validating Web Service Loadbalancer ###"
+    fo.puts parsed_data_1
+    fo.puts ''
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "connection issue ....continuing"  
+end
+
+begin
+  page = Nokogiri::HTML(open("https://#{hostname}/server-status", :http_basic_authentication => %w[weblogic opera321] ))
+  parsed_data_1 = page.css('h1').map(&:text)
+  parsed_data_2 = page.css('dt').map(&:text)
+  File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+    fo.puts "#### Validating OHS Status ###"
+    fo.puts parsed_data_1
+    fo.puts parsed_data_2
+    fo.puts ''
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "connection issue ....continuing"  
+end
+
+File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+ fo.puts "### OXISERVLETS STATUS ###"
+ fo.puts ''
+ fo.close
+end
+
+begin
+  page = Nokogiri::HTML(open("https://#{hostname}/Operajserv/OXIServlets/PMSInterface?info=Y", :http_basic_authentication => %w[weblogic opera321] ))
+  parsed_data_1 = page.css("h1").map(&:text)
+  parsed_data_2 = page.css("tr td")[0].text
+  parsed_data_3 = page.css("tr td")[1].text
+  parsed_data_4 = page.css("tr td")[2].text
+  parsed_data_5 = page.css("tr td")[3].text
+  File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+    fo.write(parsed_data_1)
+    fo.write(parsed_data_2)
+    fo.write(parsed_data_3)
+    fo.write(parsed_data_4)
+    fo.write(parsed_data_5)
+    fo.puts ''
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/PMSInterface - connection issue ....continuing"  
+end
+
+begin
+  page = Nokogiri::HTML(open("https://#{hostname}/Operajserv/OXIServlets/ORSInterface?info=y", :http_basic_authentication => %w[weblogic opera321] ))
+  parsed_data_1 = page.css("h1").map(&:text)
+  parsed_data_2 = page.css("tr td")[0].text
+  parsed_data_3 = page.css("tr td")[1].text
+  parsed_data_4 = page.css("tr td")[2].text
+  parsed_data_5 = page.css("tr td")[3].text
+  File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+    fo.write(parsed_data_1)
+    fo.write(parsed_data_2)
+    fo.write(parsed_data_3)
+    fo.write(parsed_data_4)
+    fo.write(parsed_data_5)
+    fo.puts ''
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/ORSInterface - connection issue ....continuing"  
+end
+
+begin
+  page = Nokogiri::HTML(open("https://#{hostname}/Operajserv/OXIServlets/CRSStatus?info=y", :http_basic_authentication => %w[weblogic opera321] ))
+  parsed_data_1 = page.css("h1").map(&:text)
+  parsed_data_2 = page.css("tr td")[0].text
+  parsed_data_3 = page.css("tr td")[1].text
+  parsed_data_4 = page.css("tr td")[2].text
+  parsed_data_5 = page.css("tr td")[3].text
+  File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+    fo.write(parsed_data_1)
+    fo.write(parsed_data_2)
+    fo.write(parsed_data_3)
+    fo.write(parsed_data_4)
+    fo.write(parsed_data_5)
+    fo.puts ''
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/CRSStatus - connection issue ....continuing"  
+end
+
+
+begin
+  page = Nokogiri::HTML(open("https://#{hostname}/Operajserv/OXIServlets/ORSLookup?info=y", :http_basic_authentication => %w[weblogic opera321] ))
+  parsed_data_1 = page.css("h1").map(&:text)
+  parsed_data_2 = page.css("tr td")[0].text
+  parsed_data_3 = page.css("tr td")[1].text
+  parsed_data_4 = page.css("tr td")[2].text
+  parsed_data_5 = page.css("tr td")[3].text
+  File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+    fo.write(parsed_data_1)
+    fo.write(parsed_data_2)
+    fo.write(parsed_data_3)
+    fo.write(parsed_data_4)
+    fo.write(parsed_data_5)
+    fo.puts ''
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/ORSLookup - connection issue ....continuing"  
+end
+
+
+begin
+  page = Nokogiri::HTML(open("https://#{hostname}/Operajserv/OXIServlets/HXInterface?info=y", :http_basic_authentication => %w[weblogic opera321] ))
+  parsed_data_1 = page.css("h1").map(&:text)
+  parsed_data_2 = page.css("tr td")[0].text
+  parsed_data_3 = page.css("tr td")[1].text
+  parsed_data_4 = page.css("tr td")[2].text
+  parsed_data_5 = page.css("tr td")[3].text
+  File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+    fo.write(parsed_data_1)
+    fo.write(parsed_data_2)
+    fo.write(parsed_data_3)
+    fo.write(parsed_data_4)
+    fo.write(parsed_data_5)
+    fo.puts ''
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/HXInterface - connection issue ....continuing"  
+end
+
+begin
+  page = Nokogiri::HTML(open("https://#{hostname}/Operajserv/OXIServlets/BEInterface?info=Y", :http_basic_authentication => %w[weblogic opera321] ))
+  parsed_data_1 = page.css("h1").map(&:text)
+  parsed_data_2 = page.css("tr td")[0].text
+  parsed_data_3 = page.css("tr td")[1].text
+  parsed_data_4 = page.css("tr td")[2].text
+  parsed_data_5 = page.css("tr td")[3].text
+  File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+    fo.write(parsed_data_1)
+    fo.write(parsed_data_2)
+    fo.write(parsed_data_3)
+    fo.write(parsed_data_4)
+    fo.write(parsed_data_5)
+    fo.puts ''
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/BEInterface - connection issue ....continuing"  
+end
+
+begin
+  page = Nokogiri::HTML(open("https://#{hostname}/Operajserv/OXIServlets/RemoteMonitor?info=Y", :http_basic_authentication => %w[weblogic opera321] ))
+  parsed_data_1 = page.css("h1").map(&:text)
+  parsed_data_2 = page.css("tr td")[0].text
+  parsed_data_3 = page.css("tr td")[1].text
+  parsed_data_4 = page.css("tr td")[2].text
+  parsed_data_5 = page.css("tr td")[3].text
+  File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+    fo.write(parsed_data_1)
+    fo.write(parsed_data_2)
+    fo.write(parsed_data_3)
+    fo.write(parsed_data_4)
+    fo.write(parsed_data_5)
+    fo.puts ''
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/RemoteMonitor - connection issue ....continuing"  
+end
+
+begin
+  page = Nokogiri::HTML(open("https://#{hostname}/Operajserv/OXIServlets/HXInterfaceProxy=Y", :http_basic_authentication => %w[weblogic opera321] ))
+  parsed_data_1 = page.css("h1").map(&:text)
+  parsed_data_2 = page.css("tr td")[0].text
+  parsed_data_3 = page.css("tr td")[1].text
+  parsed_data_4 = page.css("tr td")[2].text
+  parsed_data_5 = page.css("tr td")[3].text
+  File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+    fo.write(parsed_data_1)
+    fo.write(parsed_data_2)
+    fo.write(parsed_data_3)
+    fo.write(parsed_data_4)
+    fo.write(parsed_data_5)
+    fo.puts ''
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/HXInterfaceProxy - connection issue ....continuing"  
+end
+
+begin
+  page = Nokogiri::HTML(open("https://#{hostname}/Operajserv/OXIServlets/ExportReceiver=Y", :http_basic_authentication => %w[weblogic opera321] ))
+  parsed_data_1 = page.css("h1").map(&:text)
+  parsed_data_2 = page.css("tr td")[0].text
+  parsed_data_3 = page.css("tr td")[1].text
+  parsed_data_4 = page.css("tr td")[2].text
+  parsed_data_5 = page.css("tr td")[3].text
+  File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+    fo.write(parsed_data_1)
+    fo.write(parsed_data_2)
+    fo.write(parsed_data_3)
+    fo.write(parsed_data_4)
+    fo.write(parsed_data_5)
+    fo.puts ''
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/ExportReceiver - connection issue ....continuing"  
+end
+
+begin
+  page = Nokogiri::HTML(open("https://#{hostname}/Operajserv/OXIServlets/WebClientProxy?info=Y", :http_basic_authentication => %w[weblogic opera321] ))
+  parsed_data_1 = page.css("h1").map(&:text)
+  parsed_data_2 = page.css("tr td")[0].text
+  parsed_data_3 = page.css("tr td")[1].text
+  parsed_data_4 = page.css("tr td")[2].text
+  parsed_data_5 = page.css("tr td")[3].text
+  File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+    fo.write(parsed_data_1)
+    fo.write(parsed_data_2)
+    fo.write(parsed_data_3)
+    fo.write(parsed_data_4)
+    fo.write(parsed_data_5)
+    fo.puts ''
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/WebClientProxy - connection issue ....continuing"  
+end
+
+begin
+  page = Nokogiri::HTML(open("https://#{hostname}/Operajserv/OXIServlets/XMLValidator?info=Y", :http_basic_authentication => %w[weblogic opera321] ))
+  parsed_data_1 = page.css("h1").map(&:text)
+  parsed_data_2 = page.css("tr td")[0].text
+  parsed_data_3 = page.css("tr td")[1].text
+  parsed_data_4 = page.css("tr td")[2].text
+  parsed_data_5 = page.css("tr td")[3].text
+  File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+    fo.write(parsed_data_1)
+    fo.write(parsed_data_2)
+    fo.write(parsed_data_3)
+    fo.write(parsed_data_4)
+    fo.write(parsed_data_5)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OXIServlets/XMLValidator?info - connection issue ....continuing"  
+end
+
+cmd = %{d:/SRE_tools/frmweb.ps1}
+encoded_cmd = Base64.strict_encode64(cmd.encode('utf-16le'))
+find = `powershell.exe -encodedCommand #{encoded_cmd}`
+File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+  fo.puts "### Checking Form and HTTPD status ###"
+  fo.puts find
+  fo.puts ''
+end
+
+log = File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a')
+command = "d:/SRE_tools/operaInst.bat"
+Open3.popen3(command) do |stdin, stdout, stderr|
+    log.puts "#{stdout.read}"
+    unless (err = stderr.read).empty? then 
+      log.puts "#{err}"
+    end
+end
+
+begin
+  page = Nokogiri::HTML(open("https://#{hostname}/reports/rwservlet/getserverinfo?server=rep#{hostname}OPERA", :http_basic_authentication => %w[weblogic opera321] ))
+  str_1 = page.css("span.OraPromptText")[0].text
+  str_2 = page.css("span.OraDataText")[0].text
+  str_3 = page.css("span.OraPromptText")[1].text
+  str_4 = page.css("span.OraDataText")[1].text
+  str_5 = page.css("span.OraPromptText")[2].text
+  str_6 = page.css("span.OraDataText")[2].text
+  str_7 = page.css("span.OraPromptText")[3].text
+  str_8 = page.css("span.OraDataText")[3].text
+  str_9 = page.css("span.OraPromptText")[4].text
+  str_10 = page.css("span.OraDataText")[4].text
+  str_11 = page.css("span.OraPromptText")[5].text
+  str_12 = page.css("span.OraDataText")[5].text
+  str_13 = page.css("span.OraPromptText")[6].text
+  str_14 = page.css("span.OraDataText")[6].text
+  str_15 = page.css("span.OraPromptText")[7].text
+  str_16 = page.css("span.OraDataText")[7].text
+  str_17 = page.css("span.OraPromptText")[8].text
+  str_18 = page.css("span.OraDataText")[8].text
+  str_19 = page.css("span.OraPromptText")[9].text
+  str_20 = page.css("span.OraDataText")[9].text
+  str_21 = page.css("span.OraPromptText")[10].text
+  str_22 = page.css("span.OraDataText")[10].text
+  str_23 = page.css("span.OraPromptText")[11].text
+  str_24 = page.css("span.OraDataText")[11].text
+  str_25 = page.css("span.OraPromptText")[12].text
+  str_26 = page.css("span.OraDataText")[12].text
+  str_27 = page.css("span.OraPromptText")[13].text
+  str_28 = page.css("span.OraDataText")[13].text
+  str_29 = page.css("span.OraPromptText")[14].text
+  str_30 = page.css("span.OraDataText")[14].text
+  File.open("#{file_path}/#{hostname}_APP_STATUS.txt", 'a') do |fo|
+    fo.puts "#### Validating Servlets Job Status ###"
+    fo.print str_1
+    fo.print str_2
+    fo.print str_3
+    fo.print str_4
+    fo.print str_5
+    fo.print str_6
+    fo.print str_7
+    fo.print str_8
+    fo.print str_9
+    fo.print str_10
+    fo.print str_11
+    fo.print str_12
+    fo.print str_13
+    fo.print str_14
+    fo.print str_15
+    fo.print str_16
+    fo.print str_17
+    fo.print str_18
+    fo.print str_19
+    fo.print str_20
+    fo.print str_21
+    fo.print str_22
+    fo.print str_23
+    fo.print str_24
+    fo.print str_25
+    fo.print str_26
+    fo.print str_27
+    fo.print str_28
+    fo.print str_29
+    fo.print str_30
+end
+rescue *EXCEPTIONS => connection_issue
+  puts "connection issue ....continuing"  
+end

@@ -1,0 +1,48 @@
+require "open-uri"
+require "socket"
+require "nokogiri"
+require "openssl"
+
+if hostname = ARGV[0]
+ puts "Entered HostName : #{hostname}"
+elsif hostname = Socket.gethostname
+ puts "HostName : #{hostname}"
+else
+ puts "if you are running from Jump server, script usage e.g. - <script> <hostname>"
+ puts "!! sorry can't guess hostname, better luck next time !!"
+ exit 0
+end 
+
+OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
+file_path = 'd:/temp'
+
+remote_base_url = "https://#{hostname}:7012/management/tenant-monitoring/servers?format=full"
+remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+File.open("#{file_path}/#{hostname}-OAM-healthcheck-status-page.html", 'a') do |fo|
+  fo.write(remote_data)
+  fo.close
+end
+
+remote_base_url = "https://#{hostname}:7012/management/tenant-monitoring/datasources?full"
+remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+File.open("#{file_path}/#{hostname}-OAM-healthcheck-status-page.html", 'a') do |fo|
+  fo.write(remote_data)
+  fo.close
+end
+
+remote_base_url = "https://#{hostname}/server-status"
+remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+File.open("#{file_path}/#{hostname}-OAM-healthcheck-status-page.html", 'a') do |fo|
+  fo.write(remote_data)
+  fo.close
+end
+
+doc = Nokogiri::HTML(open("#{file_path}/#{hostname}-OAM-healthcheck-status-page.html"))
+doc.to_html
+File.open("#{file_path}/#{hostname}-OAM-overall-status.html", 'w') do |fo|
+  doc.search('pre').each(&:remove)
+  fo.puts doc
+end
+
+puts "Consolidated Output File Location : #{file_path}/#{hostname}-OAM-overall-status.html"
+

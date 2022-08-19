@@ -1,0 +1,45 @@
+require "open-uri"
+require "socket"
+require "openssl"
+require "time"
+
+if hostname = ARGV[0]
+ puts "Entered HostName : #{hostname}"
+elsif hostname = Socket.gethostname
+ puts "HostName : #{hostname}" 
+else
+ puts "if you are running from Jump server, script usage e.g. - <script> <hostname>"
+ puts "!! sorry can't guess hostname, better luck next time !!"
+ exit 0
+end 
+
+OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
+file_path = '/u01/ora/scripts/app_validation/output'
+EXCEPTIONS = [OpenURI::HTTPError, Errno::ECONNREFUSED, Errno::ENOENT]
+
+time = Time.new
+cur_time = time.strftime("%d%m%Y%k%M")
+
+begin
+  remote_base_url = "https://#{hostname}:7032/management/tenant-monitoring/servers?format=full"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-MW-OSB-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "OSB_WLS_HOME - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "https://#{hostname}:7032/management/tenant-monitoring/datasources?full"
+  remote_data = open("#{remote_base_url}", :http_basic_authentication => %w[weblogic opera321]).read
+  File.open("#{file_path}/#{hostname}-MW-OSB-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "OSB_WLS_HOME - connection issue ....continuing"  
+end
+
+puts "Consolidated Output File Location : #{file_path}/#{hostname}-#{cur_time}-MW-OSB-healthcheck-status-page.html"

@@ -1,0 +1,71 @@
+require "open-uri"
+require "socket"
+require "openssl"
+require "time"
+
+if hostname = Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address
+ puts "Entered HostName : #{hostname}"
+else
+ puts "if you are running from Jump server script usage e.g. - <script> <hostname>"
+ puts "!! sorry can't guess hostname, better luck next time !!"
+ exit 0
+end
+
+OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
+file_path = 'd:/SRE_tools/output'
+EXCEPTIONS = [OpenURI::HTTPError, Errno::ECONNREFUSED, Errno::ENOENT]
+
+time = Time.new
+cur_time = time.strftime("%d%m%Y%k%M")
+
+begin
+  File.delete("#{file_path}/#{hostname}-OEDS-OWS-healthcheck-status-page.html") if File.exist?("#{file_path}")
+rescue *EXCEPTIONS => file_notfound
+  puts "File not found issue ....continuing"
+end
+
+begin 
+  remote_base_url = "http://#{hostname}/OWS_WS_51/Information.asmx"  
+  remote_data = open("#{remote_base_url}").read
+  File.open("#{file_path}/#{hostname}-OEDS-OWS-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+    puts "/OWS_WS_51/Information - connection issue ....continuing"
+end
+
+begin
+  remote_base_url = "http://#{hostname}/OWS_WS_51/Availability.asmx"
+  remote_data = open("#{remote_base_url}").read
+  File.open("#{file_path}/#{hostname}-OEDS-OWS-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+  puts "/OWS_WS_51/Availability - connection issue ....continuing"
+end
+
+begin
+  remote_base_url = "http://#{hostname}/OWS_WS_51/Reservation.asmx"
+  remote_data = open("#{remote_base_url}").read
+  File.open("#{file_path}/#{hostname}-OEDS-OWS-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+    puts "/OWS_WS_51/Reservation - connection issue ....continuing"  
+end
+
+begin
+  remote_base_url = "http://#{hostname}/Kiosk30/Opera/KioskInterface.asmx"
+  remote_data = open("#{remote_base_url}").read
+  File.open("#{file_path}/#{hostname}-OEDS-OWS-healthcheck-status-page.html", 'a') do |fo|
+    fo.write(remote_data)
+    fo.close
+  end
+rescue *EXCEPTIONS => connection_issue
+    puts "/Opera/KioskInterface - connection issue ....continuing"  
+end
+
+puts "Consolidated Output File Location : #{file_path}/#{hostname}-#{cur_time}-OEDS-OWS-healthcheck-status-page.html"
